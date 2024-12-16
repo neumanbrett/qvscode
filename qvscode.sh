@@ -45,9 +45,9 @@
 
 my_name=$(basename $0)
 my_root=$(cd $(dirname $(readlink -f $0))/..; pwd)
-launch_script=$my_root/launch.pbs
-mkdir -p $SCRATCH/tmp/qvscode
-qvscode_log=$SCRATCH/tmp/qvscode/qvscode.$(date +"%Y%m%d%H%M%S").log
+launch_script=/glade/u/home/bneuman/scripts/vscode/qvscode/launch.pbs
+mkdir -p $SCRATCH/.qvscode_logs
+qvscode_log=$SCRATCH/.qvscode_logs/qvscode.$(date +"%Y%m%d%H%M%S").log
 
 # Determine the NCAR system and exit if invalid
 hostname=$(hostname)
@@ -115,7 +115,7 @@ else
     default_project=$PBS_ACCOUNT
     default_nodes="1"
     default_num_cpus="1"
-    default_cpu_type="skylake"
+    default_cpu_type=""
     default_memory="10GB"
     default_mpi_procs="1"
     default_ompthreads="1"
@@ -174,7 +174,7 @@ if [[ "$use_defaults" =~ ^[Nn]$ ]]; then
     read -p "Enter memory [${default_memory}]: " memory
     memory=${memory:-$default_memory}
 
-    read -p "Enter number of GPUs (leave empty or 0 if none) [${default_gpu_count}]: " gpu_count
+    read -p "Enter number of GPUs [${default_gpu_count}]: " gpu_count
     gpu_count=${gpu_count:-$default_gpu_count}
 
     read -p "Enter walltime [${default_walltime}]: " walltime
@@ -205,6 +205,12 @@ if [[ "$advanced_options" =~ ^[Yy]$ ]] && [[ "$user_settings" -eq 0 ]]; then
     else
         gpu_type=${gpu_type:-$default_gpu_type}
     fi
+
+    read -p "Enter MPI Ranks [${default_mpi_procs}]: " mpi_procs
+    mpi_procs=${mpi_procs:-$default_mpi_procs}
+
+    read -p "Enter OMP Threads [${default_ompthreads}]: " ompthreads
+    ompthreads=${ompthreads:-$default_ompthreads}
 fi
 
 
@@ -218,7 +224,7 @@ echo "CPUs:        $num_cpus"
 echo "Memory:      $memory"
 echo "Walltime:    $walltime"
 echo "Path:        $path"
-if [[ "$advanced_options" -eq 1 ]] || [[ "$user_settings" -eq 1 ]]; then
+if [[ "$advanced_options" =~ ^[Yy]$ ]] || [[ "$user_settings" -eq 1 ]]; then
     echo "CPU Type:    $cpu_type"
     echo "GPU Type:    $gpu_type"
     echo "MPI Procs:   $mpi_procs"
@@ -247,9 +253,9 @@ qsub_cmd () {
     select_args="-l select=$nodes:ncpus=$num_cpus:mem=$memory" 
     walltime_arg="-l walltime=$walltime"
     log_args="-j oe -o $qvscode_log"
-    launch_pbs="-v walltime_seconds=$walltime_seconds launch.pbs"
+    launch_pbs="-v walltime_seconds=$walltime_seconds $launch_script"
 
-    if [[ "$advanced_options" -eq 1 ]] || [[ "$user_settings" -eq 1 ]]; then
+    if [[ "$advanced_options" =~ ^[Yy]$ ]] || [[ "$user_settings" -eq 1 ]]; then
         if [ -n "$mpi_procs" ]; then
             select_args="$select_args:mpiprocs=$mpi_procs"
         fi
@@ -258,15 +264,15 @@ qsub_cmd () {
             select_args="$select_args:ompthreads=$ompthreads"
         fi
 
+        if [[ -n "$cpu_type" ]]; then
+            select_args="$select_args:cpu_type=$cpu_type"
+        fi
+
         if [[ $gpu_count -gt 0 ]]; then
             select_args="$select_args:ngpus=$gpu_count"
             if [[ -n "$gpu_type" ]]; then
                 select_args="$select_args -l gpu_type=$gpu_type"
             fi
-        fi
-
-        if [[ -n "$cpu_type" ]]; then
-            select_args="$select_args -l cpu_type=$cpu_type"
         fi
     fi
 
