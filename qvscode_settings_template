@@ -1,0 +1,12 @@
+system=casper
+project=SCSG0001
+nodes=1
+num_cpus=1
+cpu_type=
+memory=4GB
+mpi_procs=1
+ompthreads=1
+gpu_count=
+gpu_type=
+walltime=01:00:00
+path=$(pwd)

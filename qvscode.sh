@@ -46,6 +46,8 @@
 my_name=$(basename $0)
 my_root=$(cd $(dirname $(readlink -f $0))/..; pwd)
 launch_script=$my_root/launch.pbs
+mkdir -p $SCRATCH/tmp/qvscode
+qvscode_log=$SCRATCH/tmp/qvscode/qvscode.$(date +"%Y%m%d%H%M%S").log
 
 # Determine the NCAR system and exit if invalid
 hostname=$(hostname)
@@ -67,9 +69,8 @@ fi
 dav_max_cpus=128
 dav_max_gpus=8
 
-# Check to see if the $HOME/.vscc_settings file exists, and if not, use the default values
+# Check to see if the $HOME/.qvscode_settings file exists, and if not, use the default values
 if [[ -f "$HOME/.qvscode_settings" ]]; then
-    echo "User Settings Mode"
     echo "Using settings file: $HOME/.qvscode_settings"
     source $HOME/.qvscode_settings
     user_settings=1
@@ -79,37 +80,37 @@ else
 fi
 
 # Parse user settings file
-if [ $user_settings -eq 0 ]; then
+if [ $user_settings -eq 1 ]; then
 
-    # while IFS= read -r line; do
-    #     if [[ $line == *"project"* ]]; then
-    #         default_project=$(echo $line | cut -d'=' -f2)
-    #     elif [[ $line == *"nodes"* ]]; then
-    #         default_nodes=$(echo $line | cut -d'=' -f2)
-    #     elif [[ $line == *"num_cpus"* ]]; then
-    #         default_num_cpus=$(echo $line | cut -d'=' -f2)
-    #     elif [[ $line == *"cpu_type"* ]]; then
-    #         default_cpu_type=$(echo $line | cut -d'=' -f2)
-    #     elif [[ $line == *"memory"* ]]; then
-    #         default_memory=$(echo $line | cut -d'=' -f2)
-    #     elif [[ $line == *"mpi_procs"* ]]; then
-    #         default_mpi_procs=$(echo $line | cut -d'=' -f2)
-    #     elif [[ $line == *"ompthreads"* ]]; then
-    #         default_ompthreads=$(echo $line | cut -d'=' -f2)
-    #     elif [[ $line == *"gpu_count"* ]]; then
-    #         default_gpu_count=$(echo $line | cut -d'=' -f2)
-    #     elif [[ $line == *"gpu_type"* ]]; then
-    #         default_gpu_type=$(echo $line | cut -d'=' -f2)
-    #     elif [[ $line == *"walltime"* ]]; then
-    #         default_walltime=$(echo $line | cut -d'=' -f2)
-    #     elif [[ $line == *"path"* ]]; then
-    #         default_path=$(echo $line | cut -d'=' -f2 | sed 's/^ *//;s/ *$//')
-    #         eval default_path=$default_path
-    #     fi
-    # done < "$HOME/.vscc_settings"
+    while IFS= read -r line; do
+        if [[ $line == *"project"* ]]; then
+            default_project=$(echo $line | cut -d'=' -f2)
+        elif [[ $line == *"nodes"* ]]; then
+            default_nodes=$(echo $line | cut -d'=' -f2)
+        elif [[ $line == *"num_cpus"* ]]; then
+            default_num_cpus=$(echo $line | cut -d'=' -f2)
+        elif [[ $line == *"cpu_type"* ]]; then
+            default_cpu_type=$(echo $line | cut -d'=' -f2)
+        elif [[ $line == *"memory"* ]]; then
+            default_memory=$(echo $line | cut -d'=' -f2)
+        elif [[ $line == *"mpi_procs"* ]]; then
+            default_mpi_procs=$(echo $line | cut -d'=' -f2)
+        elif [[ $line == *"ompthreads"* ]]; then
+            default_ompthreads=$(echo $line | cut -d'=' -f2)
+        elif [[ $line == *"gpu_count"* ]]; then
+            default_gpu_count=$(echo $line | cut -d'=' -f2)
+        elif [[ $line == *"gpu_type"* ]]; then
+            default_gpu_type=$(echo $line | cut -d'=' -f2)
+        elif [[ $line == *"walltime"* ]]; then
+            default_walltime=$(echo $line | cut -d'=' -f2)
+        elif [[ $line == *"path"* ]]; then
+            default_path=$(echo $line | cut -d'=' -f2 | sed 's/^ *//;s/ *$//')
+            eval default_path=$default_path
+        fi
+    done < "$HOME/.qvscode_settings"
 
 # User settings file not found, use the default values
-#else
+else
     echo "User Prompt Mode"
     default_project=$PBS_ACCOUNT
     default_nodes="1"
@@ -199,7 +200,7 @@ if [[ "$advanced_options" =~ ^[Yy]$ ]] && [[ "$user_settings" -eq 0 ]]; then
     cpu_type=${cpu_type:-$default_cpu_type}
 
     if [[ "$gpu_count" -gt 0 ]]; then
-        read -p "Enter GPU type (v100, a100, a100_80gb, l40, gp100) [${default_gpu_type}]): " gpu_type
+        read -p "Enter GPU type (v100, a100, h100, l40, gp100) [${default_gpu_type}]): " gpu_type
         gpu_type=${gpu_type:-$default_gpu_type}
     else
         gpu_type=${gpu_type:-$default_gpu_type}
@@ -242,9 +243,10 @@ walltime_seconds=$(convert_to_seconds)
 
 qsub_cmd () {
     # Base case arguments [ USER SETTINGS -eq 0 ] && [ ADVANCED OPTIONS -eq 0]
-    base_args="-A $project -q $queue -N vscc_${USER}" 
+    base_args="-A $project -q $queue -N qvscode_${USER}" 
     select_args="-l select=$nodes:ncpus=$num_cpus:mem=$memory" 
     walltime_arg="-l walltime=$walltime"
+    log_args="-j oe -o $qvscode_log"
     launch_pbs="-v walltime_seconds=$walltime_seconds launch.pbs"
 
     if [[ "$advanced_options" -eq 1 ]] || [[ "$user_settings" -eq 1 ]]; then
@@ -269,7 +271,7 @@ qsub_cmd () {
     fi
 
     #echo "qsub $base_args $select_args $walltime_arg $launch_pbs"
-    echo "qsub $base_args $select_args $walltime_arg $launch_pbs"
+    echo "qsub $base_args $select_args $walltime_arg $log_args $launch_pbs"
 }
 
 # --- Launch the job with PBS scheduler and collect the job ID --- #
