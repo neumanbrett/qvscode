@@ -16,7 +16,7 @@
 #         memory=6GB
 #         mpi_procs=4
 #         ompthreads=1
-#         gpu_count=0
+#         num_gpus=0
 #         gpu_type=v100
 #         walltime=01:00:00
 #         path=$HOME
@@ -97,8 +97,8 @@ if [ $user_settings -eq 1 ]; then
             default_mpi_procs=$(echo $line | cut -d'=' -f2)
         elif [[ $line == *"ompthreads"* ]]; then
             default_ompthreads=$(echo $line | cut -d'=' -f2)
-        elif [[ $line == *"gpu_count"* ]]; then
-            default_gpu_count=$(echo $line | cut -d'=' -f2)
+        elif [[ $line == *"num_gpus"* ]]; then
+            default_num_gpus=$(echo $line | cut -d'=' -f2)
         elif [[ $line == *"gpu_type"* ]]; then
             default_gpu_type=$(echo $line | cut -d'=' -f2)
         elif [[ $line == *"walltime"* ]]; then
@@ -119,7 +119,7 @@ else
     default_memory="10GB"
     default_mpi_procs="1"
     default_ompthreads="1"
-    default_gpu_count="0"
+    default_num_gpus="0"
     default_gpu_type="v100"
     default_walltime="02:00:00"
     default_path=$(pwd)
@@ -136,7 +136,7 @@ if [ "$user_settings" -eq 1 ]; then
     memory=$default_memory
     mpi_procs=$default_mpi_procs
     ompthreads=$default_ompthreads
-    gpu_count=$default_gpu_count
+    num_gpus=$default_num_gpus
     gpu_type=$default_gpu_type
     walltime=$default_walltime
     eval path=$default_path
@@ -156,7 +156,7 @@ if [[ "$user_settings" -eq 0 ]]; then
         \nNodes:    $default_nodes \
         \nCPUs:     $default_num_cpus \
         \nMemory:   $default_memory \
-        \nGPUs:     $default_gpu_count \
+        \nGPUs:     $default_num_gpus \
         \nWalltime: $default_walltime \
         \nPath:     $default_path" 
     read -p "(Y/N) [default: Y]: " use_defaults
@@ -174,8 +174,8 @@ if [[ "$use_defaults" =~ ^[Nn]$ ]]; then
     read -p "Enter memory [${default_memory}]: " memory
     memory=${memory:-$default_memory}
 
-    read -p "Enter number of GPUs [${default_gpu_count}]: " gpu_count
-    gpu_count=${gpu_count:-$default_gpu_count}
+    read -p "Enter number of GPUs [${default_num_gpus}]: " num_gpus
+    num_gpus=${num_gpus:-$default_num_gpus}
 
     read -p "Enter walltime [${default_walltime}]: " walltime
     walltime=${walltime:-$default_walltime}
@@ -189,7 +189,7 @@ else
     nodes=$default_nodes
     num_cpus=$default_num_cpus
     memory=$default_memory
-    gpu_count=$default_gpu_count
+    num_gpus=$default_num_gpus
     walltime=$default_walltime
     path=$default_path
 fi
@@ -199,7 +199,7 @@ if [[ "$advanced_options" =~ ^[Yy]$ ]] && [[ "$user_settings" -eq 0 ]]; then
     read -p "Enter CPU type [${default_cpu_type}]: " cpu_type
     cpu_type=${cpu_type:-$default_cpu_type}
 
-    if [[ "$gpu_count" -gt 0 ]]; then
+    if [[ "$num_gpus" -gt 0 ]]; then
         read -p "Enter GPU type (v100, a100, h100, l40, gp100) [${default_gpu_type}]): " gpu_type
         gpu_type=${gpu_type:-$default_gpu_type}
     else
@@ -268,8 +268,8 @@ qsub_cmd () {
             select_args="$select_args:cpu_type=$cpu_type"
         fi
 
-        if [[ $gpu_count -gt 0 ]]; then
-            select_args="$select_args:ngpus=$gpu_count"
+        if [[ $num_gpus -gt 0 ]]; then
+            select_args="$select_args:ngpus=$num_gpus"
             if [[ -n "$gpu_type" ]]; then
                 select_args="$select_args -l gpu_type=$gpu_type"
             fi

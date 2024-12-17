@@ -49,7 +49,7 @@ cpu_type=
 memory=4GB
 mpi_procs=1
 ompthreads=1
-gpu_count=
+num_gpus=
 gpu_type=
 walltime=01:00:00
 path=$(pwd)
@@ -67,3 +67,7 @@ Pressing `Ctrl+C` from the login node will kill the PBS job and end your compute
 ### Logs
 
 Log files are stored in `$SCRATCH/.qvscode` and show the user arguments and job submission details.
+
+### Additional considerations
+
+The repository can be found here: 
