@@ -46,6 +46,14 @@ launch_script=$my_root/bin/launch.pbs
 mkdir -p $SCRATCH/.qvscode_logs
 qvscode_log=$SCRATCH/.qvscode_logs/qvscode.$(date +"%Y%m%d%H%M%S").log
 
+# Check for -h or --help argument
+for arg in "$@"; do
+    if [[ "$arg" == "-h" || "$arg" == "--help" ]]; then
+        usage
+        exit 0
+    fi
+done
+
 # Determine the NCAR system and exit if invalid
 hostname=$(hostname)
 if [[ "$hostname" =~ ^derecho.* ]]; then
@@ -63,8 +71,6 @@ else
     exit 1
 fi
 
-dav_max_cpus=128
-dav_max_gpus=8
 
 # Check to see if the $HOME/.qvscode_settings file exists, and if not, use the default values
 if [[ -f "$HOME/.qvscode_settings" ]]; then
