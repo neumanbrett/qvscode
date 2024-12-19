@@ -1,51 +1,48 @@
 #!/bin/bash
 
-# function usage {
-# Usage: $my_name
-# This command launches a PBS job on a NCAR HPC system and opens a VSCode window on the compute node.
-# It contains two modes for populating the PBS arguments required to launch a job:
-
-# User Settings file mode:
-#     - Looks for a file named $HOME/.vscc_settings for default values
-#     - Format for settings file:
-#         system=casper
-#         project=SCSG0001
-#         nodes=1
-#         num_cpus=4
-#         cpu_type=
-#         memory=6GB
-#         mpi_procs=4
-#         ompthreads=1
-#         num_gpus=0
-#         gpu_type=v100
-#         walltime=01:00:00
-#         path=$HOME
-
-# User prompt mode:
-#     - Basic options:
-#         - Project
-#         - Number of CPUs
-#         - Memory
-#         - Number of GPUs
-#         - Walltime
-#         - Path
-#     - Advanced options:
-#         - CPU type
-#         - GPU type
-#         - MPI Procs
-#         - OMP Threads
-#
-
-# Project: 
-# - NCAR Project Account
-#     - Default: $PBS_ACCOUNT
-#         - User defined variable in startup scripts
-#     - 
-# }
+function usage {
+    echo "Launches a PBS job on a NCAR HPC system and opens a VSCode window on the compute node."
+    echo "It contains two modes for populating the PBS arguments required to launch a job:"
+    echo ""
+    echo "User Settings file mode:"
+    echo "    - Looks for the file: \$HOME/.qvscode_settings"
+    echo "    - Format for settings file:"
+    echo "        system=casper"
+    echo "        project=SCSG0001"
+    echo "        nodes=1"
+    echo "        num_cpus=4"
+    echo "        cpu_type="
+    echo "        memory=6GB"
+    echo "        mpi_procs=4"
+    echo "        ompthreads=1"
+    echo "        num_gpus=0"
+    echo "        gpu_type=v100"
+    echo "        walltime=01:00:00"
+    echo "        path=\$HOME"
+    echo ""
+    echo "User prompt mode:"
+    echo "    - Basic options:"
+    echo "        - Project"
+    echo "        - Number of CPUs"
+    echo "        - Memory"
+    echo "        - Number of GPUs"
+    echo "        - Walltime"
+    echo "        - Path"
+    echo "    - Advanced options:"
+    echo "        - CPU type"
+    echo "        - GPU type"
+    echo "        - MPI Procs"
+    echo "        - OMP Threads"
+    echo ""
+    echo "Project:"
+    echo "    - NCAR Project Account"
+    echo "        - Default: \$PBS_ACCOUNT"
+    echo "            - User defined variable in startup scripts"
+}
 
 my_name=$(basename $0)
 my_root=$(cd $(dirname $(readlink -f $0))/..; pwd)
-launch_script=/glade/u/home/bneuman/scripts/vscode/qvscode/launch.pbs
+launch_script=$my_root/bin/launch.pbs
 mkdir -p $SCRATCH/.qvscode_logs
 qvscode_log=$SCRATCH/.qvscode_logs/qvscode.$(date +"%Y%m%d%H%M%S").log
 
@@ -81,7 +78,6 @@ fi
 
 # Parse user settings file
 if [ $user_settings -eq 1 ]; then
-
     while IFS= read -r line; do
         if [[ $line == *"project"* ]]; then
             default_project=$(echo $line | cut -d'=' -f2)
@@ -108,11 +104,11 @@ if [ $user_settings -eq 1 ]; then
             eval default_path=$default_path
         fi
     done < "$HOME/.qvscode_settings"
+fi
 
-# User settings file not found, use the default values
-else
+if [[ $user_settings -eq 0 ]]; then
     echo "User Prompt Mode"
-    default_project=$PBS_ACCOUNT
+    default_project=${PBS_ACCOUNT}
     default_nodes="1"
     default_num_cpus="1"
     default_cpu_type=""
@@ -126,32 +122,34 @@ else
     jobdatetime=$(date +"%Y%m%d%H%M%S")
 fi    
 
+project=$default_project
+nodes=$default_nodes
+num_cpus=$default_num_cpus
+cpu_type=$default_cpu_type
+memory=$default_memory
+mpi_procs=$default_mpi_procs
+ompthreads=$default_ompthreads
+num_gpus=$default_num_gpus
+gpu_type=$default_gpu_type
+walltime=$default_walltime
+eval path=$default_path
 
 # Required project argument
-if [ "$user_settings" -eq 1 ]; then
-    project=$default_project
-    nodes=$default_nodes
-    num_cpus=$default_num_cpus
-    cpu_type=$default_cpu_type
-    memory=$default_memory
-    mpi_procs=$default_mpi_procs
-    ompthreads=$default_ompthreads
-    num_gpus=$default_num_gpus
-    gpu_type=$default_gpu_type
-    walltime=$default_walltime
-    eval path=$default_path
-else
-    read -p "Enter Project [${default_project}]: " project
+if [ "$user_settings" -eq 0 ]; then
     if [[ -z "$project" ]]; then
-        usage
-        exit 1
+        read -p "Enter Project [${project}]: " project
     else
-        project=${project:-$default_project}
+        echo "Using PBS_ACCOUNT: $project"
+    fi
+    if [[ -z "$project" ]]; then
+        echo "Error: Project is required. Exiting..."
+        exit 1
     fi
 fi
 
 # Ask if user wants default values
 if [[ "$user_settings" -eq 0 ]]; then
+    echo ""
     echo -e "Do you want to use default resource and path values:\
         \nNodes:    $default_nodes \
         \nCPUs:     $default_num_cpus \
