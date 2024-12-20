@@ -4,23 +4,7 @@ function usage {
     echo "Launches a PBS job on a NCAR HPC system and opens a VSCode window on the compute node."
     echo "It contains two modes for populating the PBS arguments required to launch a job:"
     echo ""
-    echo "User Settings file mode:"
-    echo "    - Looks for the file: \$HOME/.qvscode_settings"
-    echo "    - Format for settings file:"
-    echo "        system=casper"
-    echo "        project=SCSG0001"
-    echo "        nodes=1"
-    echo "        num_cpus=4"
-    echo "        cpu_type="
-    echo "        memory=6GB"
-    echo "        mpi_procs=4"
-    echo "        ompthreads=1"
-    echo "        num_gpus=0"
-    echo "        gpu_type=v100"
-    echo "        walltime=01:00:00"
-    echo "        path=\$HOME"
-    echo ""
-    echo "User prompt mode:"
+    echo "Prompt mode:"
     echo "    - Basic options:"
     echo "        - Project"
     echo "        - Number of CPUs"
@@ -34,6 +18,22 @@ function usage {
     echo "        - MPI Procs"
     echo "        - OMP Threads"
     echo ""
+    echo "Settings mode:"
+    echo "    - Looks for the file: \$HOME/.qvscode_settings"
+    echo "    - Format for settings file:"
+    echo "        system=casper"
+    echo "        project=SCSG0001"
+    echo "        nodes=1"
+    echo "        num_cpus=4"
+    echo "        cpu_type="
+    echo "        memory=6GB"
+    echo "        mpi_procs=4"
+    echo "        ompthreads=1"
+    echo "        num_gpus=0"
+    echo "        gpu_type=v100"
+    echo "        walltime=01:00:00"
+    echo "        path=\$(pwd)"
+    echo ""
     echo "Project:"
     echo "    - NCAR Project Account"
     echo "        - Default: \$PBS_ACCOUNT"
@@ -43,8 +43,13 @@ function usage {
 my_name=$(basename $0)
 my_root=$(cd $(dirname $(readlink -f $0))/..; pwd)
 launch_script=$my_root/bin/launch.pbs
+
+# Log file info
 mkdir -p $SCRATCH/.qvscode_logs
 qvscode_log=$SCRATCH/.qvscode_logs/qvscode.$(date +"%Y%m%d%H%M%S").log
+
+# Unset qstat debug messages that may interfere with qsub
+unset QSCACHE_DEBUG
 
 # Check for -h or --help argument
 for arg in "$@"; do
@@ -53,6 +58,12 @@ for arg in "$@"; do
         exit 0
     fi
 done
+
+# Ensure the script is launched from VSCode
+if [ "$TERM_PROGRAM" != "vscode" ]; then
+    echo "This script must be launched from VSCode. Exiting..."
+    exit 1
+fi
 
 # Determine the NCAR system and exit if invalid
 hostname=$(hostname)
@@ -122,10 +133,9 @@ if [[ $user_settings -eq 0 ]]; then
     default_mpi_procs="1"
     default_ompthreads="1"
     default_num_gpus="0"
-    default_gpu_type="v100"
+    default_gpu_type=""
     default_walltime="02:00:00"
     default_path=$(pwd)
-    jobdatetime=$(date +"%Y%m%d%H%M%S")
 fi    
 
 project=$default_project
@@ -139,6 +149,7 @@ num_gpus=$default_num_gpus
 gpu_type=$default_gpu_type
 walltime=$default_walltime
 eval path=$default_path
+jobdatetime=$(date +"%Y%m%d%H%M%S")
 
 # Required project argument
 if [ "$user_settings" -eq 0 ]; then
