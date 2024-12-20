@@ -4,11 +4,25 @@
 
 ## Launching a VSCode session using NCAR compute node job
 
-You must have a running login session to launch the *qvscode* script.  Connect to the login node using the method described here: https://ncar-hpc-docs.readthedocs.io/en/latest/environment-and-software/vscode/#connecting-to-compute-nodes  
+You must have a running login session within VSCode to launch the *qvscode* script.  Connect to the login node in VSCode using the method described here: https://ncar-hpc-docs.readthedocs.io/en/latest/environment-and-software/vscode/#connecting-to-compute-nodes  
 
-From a login node launch the script:
+The command `qvscode` can be called directly in the latest NCAR software stack 24.12.
 
-`./glade/home/u/bneuman/scripts/qvscode/qvscode.sh`
+Alternatively, you can clone the repository and call it a login node launch the script:
+
+`bin/qvscode`
+
+## Procedure
+
+1. Open VSCode on your local machine
+2. In VSCode, connect to a Casper login node using RemoteSSH as described [here](https://ncar-hpc-docs.readthedocs.io/en/latest/environment-and-software/vscode/#connecting-to-derecho-or-casper)
+3. Once connected to the login node, open up a new terminal window (Ctrl+Shift+\`)
+4. Load the ncarenv/24.12 using `module load ncarenv/24.12` in the terminal
+5. Call `qvscode`
+6. Enter a valid project code and follow the prompts to launch a PBS job
+7. A new VSCode window will open and connect to the compute node when your PBS job has started
+
+Step 6 will not prompt you for a project code if you have PBS_ACCOUNT defined or if you are using the [Settings](#settings) mode and have set your project code with in `.qvscode_settings` file.
 
 ### Operating Modes
 
@@ -36,7 +50,7 @@ MPI Procs:
 OMP Threads: 
 ```
 
-#### User Settings Mode
+#### Settings Mode
 
 If the script finds a `qvscode_settings` file in `$HOME/.qvscode_settings` then it will import the variables into the script. The template requires specific keywords to pull values in.  It is *highly* recommended to copy the repository's `qvscode_settings_template` to your `$HOME` directory, rename it to `.qvscode_settings`, and then modify the values for each argument instead of manually creating the settings file.  The format for the template:
 
@@ -67,7 +81,3 @@ Pressing `Ctrl+C` from the login node will kill the PBS job and end your compute
 ### Logs
 
 Log files are stored in `$SCRATCH/.qvscode` and show the user arguments and job submission details.
-
-### Additional considerations
-
-The repository can be found here: 
