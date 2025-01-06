@@ -191,6 +191,10 @@ if [[ "$use_defaults" =~ ^[Nn]$ ]]; then
 
     read -p "Enter memory [${default_memory}]: " memory
     memory=${memory:-$default_memory}
+    # Assume GB if not specified
+    if [[ ! "$memory" =~ [Gg][Bb]$ ]]; then
+        memory="${memory}GB"
+    fi
 
     read -p "Enter number of GPUs [${default_num_gpus}]: " num_gpus
     num_gpus=${num_gpus:-$default_num_gpus}
@@ -274,6 +278,11 @@ qsub_cmd () {
     walltime_arg="-l walltime=$walltime"
     log_args="-j oe -o $qvscode_log"
     launch_pbs="-v walltime_seconds=$walltime_seconds $launch_script"
+
+    # Match MPI procs to number of CPUs for prompt mode
+    if [[ "$advanced_options" =~ ^[Nn]$ ]]; then
+        select_args="$select_args:mpiprocs=$num_cpus:ompthreads=$ompthreads"
+    fi
 
     if [[ "$advanced_options" =~ ^[Yy]$ ]] || [[ "$user_settings" -eq 1 ]]; then
         if [ -n "$mpi_procs" ]; then
