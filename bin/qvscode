@@ -80,7 +80,7 @@ done
 
 # Ensure the script is launched from VSCode
 if [ "$TERM_PROGRAM" != "vscode" ]; then
-    echo "This script must be launched from VSCode. Exiting..."
+    echo "This script must be launched from VSCode. Exiting..." | tee -a $qvscode_log
     exit 1
 fi
 
@@ -103,16 +103,16 @@ fi
 
 # Determine if we use default settings file, custom settings file (-p), or bypass settings file (-b)
 if [[ $settings_file == "$HOME/.qvscode_settings" && $bypass_user_settings == 0 ]]; then
-    echo "Using settings file: $settings_file"
+    echo "Using settings file: $settings_file" | tee -a $qvscode_log
     source $settings_file
     user_settings=1
 elif [[ $custom_settings == 1 ]]; then
     if [[ -f "$settings_file" ]]; then
-        echo "Using settings file: $settings_file"
+        echo "Using settings file: $settings_file" | tee -a $qvscode_log
         source $settings_file
         user_settings=1
     else
-        echo "Error: Settings file not found. Exiting..."
+        echo "Error: Settings file not found. Exiting..." | tee -a $qvscode_log
         exit 1
     fi
 else
@@ -182,10 +182,10 @@ if [ "$user_settings" -eq 0 ]; then
     if [[ -z "$project" ]]; then
         read -p "Enter Project [${project}]: " project
     else
-        echo "Using PBS_ACCOUNT: $project"
+        echo "Using PBS_ACCOUNT: $project" | tee -a $qvscode_log
     fi
     if [[ -z "$project" ]]; then
-        echo "Error: Project is required. Exiting..."
+        echo "Error: Project is required. Exiting..." | tee -a $qvscode_log
         exit 1
     fi
 fi
@@ -254,30 +254,32 @@ if [[ "$advanced_options" =~ ^[Yy]$ ]] && [[ "$user_settings" -eq 0 ]]; then
     ompthreads=${ompthreads:-$default_ompthreads}
 fi
 
-
-echo ""
-echo "Starting VSCode Compute Node Job..."
-echo "-----------------------------------"
-echo "Project:     $project"
-echo "Queue:       $queue"
-echo "Nodes:       $nodes"
-echo "CPUs:        $num_cpus"
-echo "Memory:      $memory"
-echo "Walltime:    $walltime"
-echo "Path:        $path"
-if [[ "$advanced_options" =~ ^[Yy]$ ]] || [[ "$user_settings" -eq 1 ]]; then
-    echo "CPU Type:    $cpu_type"
-    echo "GPU Type:    $gpu_type"
-    echo "MPI Procs:   $mpi_procs"
-    echo "OMP Threads: $ompthreads"
-fi
-echo "-----------------------------------"
+{
+    echo ""
+    echo "Starting VSCode Compute Node Job..."
+    echo "-----------------------------------"
+    echo "Project:     $project"
+    echo "Queue:       $queue"
+    echo "Nodes:       $nodes"
+    echo "CPUs:        $num_cpus"
+    echo "Memory:      $memory"
+    echo "Walltime:    $walltime"
+    echo "Path:        $path"
+    if [[ "$advanced_options" =~ ^[Yy]$ ]] || [[ "$user_settings" -eq 1 ]]; then
+        echo "CPU Type:    $cpu_type"
+        echo "GPU Type:    $gpu_type"
+        echo "MPI Procs:   $mpi_procs"
+        echo "OMP Threads: $ompthreads"
+    fi
+    echo "-----------------------------------"
+} | tee -a $qvscode_log
 
 # Function to clean up background process
 cleanup() {
     echo " "
     echo "Deleting job $job_id"
     qdel $job_id
+    declare -p | grep '^declare --' >> $qvscode_log
     #kill $pbsjob_pid
 }
 
@@ -323,14 +325,14 @@ qsub_cmd () {
 
 # --- Launch the job with PBS scheduler and collect the job ID --- #
 qsub_call=$(qsub_cmd)
-echo "Qsub request: $qsub_call"
+echo "Qsub request: $qsub_call" | tee -a $qvscode_log
 job_id=$(eval $qsub_call)
 qsub_status=$?
 
 # Check that job ID was produced
 if [[ $qsub_status != 0 ]]; then
-    echo $qcmd_job
-    echo "Error: error in qsub submission. Exiting ..."
+    echo $qcmd_job | tee -a $qvscode_log
+    echo "Error: error in qsub submission. Exiting ..." | tee -a $qvscode_log
     exit $qsub_status
 fi
 
@@ -354,7 +356,7 @@ while [[ "$jobstarted" -eq 0 ]]; do
     sleep 1
     timeout=$((timeout+1))
     if [[ "$timeout" -eq $timeout_limit ]]; then
-        echo "Error: Job $job_id did not start within $timeout_limit seconds. Exiting..."
+        echo "Error: Job $job_id did not start within $timeout_limit seconds. Exiting..." | tee -a $qvscode_log
         exit 1
     fi
 done
