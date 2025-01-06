@@ -1,6 +1,6 @@
 # qvscode
 
-*qvscode* is a script that can be run on NCAR systems to start a new VSCode session on a compute node.  The script can either take user input via terminal prompts or source a settings file in your home directory.
+*qvscode* is a script that can be run on NCAR systems to start a new VSCode session on a compute node.  The script can either take user input via terminal prompts or source a settings file in your home directory or a defined path.
 
 ## Launching a VSCode session using NCAR compute node job
 
@@ -60,18 +60,18 @@ OMP Threads:
 
 Prompt Mode Structure:
 ```
-- Basic options:"
-    - Project"
-    - Number of CPUs"
-    - Memory"
-    - Number of GPUs"
-    - Walltime"
-    - Path"
-- Advanced options:"
-    - CPU type"
-    - GPU type"
-    - MPI Procs"
-    - OMP Threads"
+- Basic options:
+    - Project
+    - Number of CPUs
+    - Memory
+    - Number of GPUs
+    - Walltime
+    - Path
+- Advanced options:
+    - CPU type
+    - GPU type
+    - MPI Procs
+    - OMP Threads
 ```
 
 #### Settings Mode
@@ -91,7 +91,6 @@ num_gpus=
 gpu_type=
 walltime=01:00:00
 path=$(pwd)
-
 ```
 
 You can specify a custom settings file to quickly launch jobs with different resources.  Use the `-p` flag to set a custom path for the qvscode settings file:
