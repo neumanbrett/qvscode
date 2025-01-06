@@ -59,7 +59,9 @@ unset QSCACHE_DEBUG
 
 # Argument default setup
 bypass_user_settings=0
-settings_file="$HOME/.qvscode_settings"
+if [[ -f "$HOME/.qvscode_settings" ]]; then
+    settings_file="$HOME/.qvscode_settings"
+fi
 
 # Check for -h or --help argument
 for arg in "$@"; do
@@ -72,6 +74,7 @@ for arg in "$@"; do
     fi
     if [[ "$arg" == "-p" || "$arg" == "--path" ]]; then
         settings_file="$2"
+        custom_settings=1
     fi
 done
 
@@ -103,7 +106,7 @@ if [[ $settings_file == "$HOME/.qvscode_settings" && $bypass_user_settings == 0 
     echo "Using settings file: $settings_file"
     source $settings_file
     user_settings=1
-elif [[ $settings_file != "$HOME/.qvscode_settings" && $bypass_user_settings == 0 ]]; then
+elif [[ $custom_settings == 1 ]]; then
     if [[ -f "$settings_file" ]]; then
         echo "Using settings file: $settings_file"
         source $settings_file
@@ -338,8 +341,9 @@ trap cleanup EXIT
 
 # Poll qstat to check if job has started
 timeout=0
+timeout_limit=1200
 jobstarted=0
-while [[ "$jobstarted" -eq 0 ]] && [[ "$timeout" -le 1200 ]]; do
+while [[ "$jobstarted" -eq 0 ]]; do
     jobstatus=$(qstat $job_id | tail -n 1 | awk '{print $5}')
 
     # Polling qstat to get job status and exit loop if job is in 'R' state
@@ -349,6 +353,10 @@ while [[ "$jobstarted" -eq 0 ]] && [[ "$timeout" -le 1200 ]]; do
     fi
     sleep 1
     timeout=$((timeout+1))
+    if [[ "$timeout" -eq $timeout_limit ]]; then
+        echo "Error: Job $job_id did not start within $timeout_limit seconds. Exiting..."
+        exit 1
+    fi
 done
 
 # Get the compute node name after job has started
