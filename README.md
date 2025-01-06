@@ -24,6 +24,14 @@ Alternatively, you can clone the repository and call it a login node launch the 
 
 Step 6 will not prompt you for a project code if you have PBS_ACCOUNT defined or if you are using the [Settings](#settings) mode and have set your project code with in `.qvscode_settings` file.
 
+### Usage
+```
+Usage: qvscode [-b | --bypass] [-p | --path] [-h | --help]
+-b | --bypass: Use prompt mode to enter job arguments and bypass the user settings file
+-p | --path: Provide the path to a qvscode settings file to use in settings mode
+-h | --help: Display this help message
+```
+
 ### Operating Modes
 
 #### Prompt Mode
@@ -44,10 +52,26 @@ If you do not have a variable `PBS_ACCOUNT` setup then you will always be prompt
 After the project prompt you will be asked if you would like to use the default values.  Answering 'N' to the default values prompts the user to enter variables for each of these basic job settings.  Note that the bracketed values are the default values and will be used if you do not enter any value.  After entering the basic settings you will be prompted to enter advanced options.  The advanced options are:
 
 ```
-CPU Type:    skylake
+CPU Type:    
 GPU Type:    
 MPI Procs:   
 OMP Threads: 
+```
+
+Prompt Mode Structure:
+```
+- Basic options:"
+    - Project"
+    - Number of CPUs"
+    - Memory"
+    - Number of GPUs"
+    - Walltime"
+    - Path"
+- Advanced options:"
+    - CPU type"
+    - GPU type"
+    - MPI Procs"
+    - OMP Threads"
 ```
 
 #### Settings Mode
@@ -69,6 +93,10 @@ walltime=01:00:00
 path=$(pwd)
 
 ```
+
+You can specify a custom settings file to quickly launch jobs with different resources.  Use the `-p` flag to set a custom path for the qvscode settings file:
+
+`qvscode -p /path/to/settings/file`
 
 ### New VSCode Job Window
 
