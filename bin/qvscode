@@ -1,8 +1,14 @@
 #!/bin/bash
 
 function usage {
-    echo "Launches a PBS job on a NCAR HPC system and opens a VSCode window on the compute node."
-    echo "It contains two modes for populating the PBS arguments required to launch a job:"
+    echo "qvscode launches a PBS job on a NCAR HPC system and opens a VSCode window on the compute node."
+    echo ""
+    echo "Usage: $my_name [-p | --prompt] [-h | --help]"
+    echo "-b | --bypass: Use prompt mode to enter job arguments and bypass any user settings files"
+    echo "-p | --path: Provide the path to a qvscode settings file to use in settings mode"
+    echo "-h | --help: Display this help message"
+    echo ""
+    echo "qvscode contains two modes for populating the PBS arguments required to launch a job:"
     echo ""
     echo "Prompt mode:"
     echo "    - Basic options:"
@@ -51,11 +57,21 @@ qvscode_log=$SCRATCH/.qvscode_logs/qvscode.$(date +"%Y%m%d%H%M%S").log
 # Unset qstat debug messages that may interfere with qsub
 unset QSCACHE_DEBUG
 
+# Argument default setup
+bypass_user_settings=0
+settings_file="$HOME/.qvscode_settings"
+
 # Check for -h or --help argument
 for arg in "$@"; do
     if [[ "$arg" == "-h" || "$arg" == "--help" ]]; then
         usage
         exit 0
+    fi
+    if [[ "$arg" == "-b" || "$arg" == "--bypass" ]]; then
+        bypass_user_settings=1
+    fi
+    if [[ "$arg" == "-p" || "$arg" == "--path" ]]; then
+        settings_file="$2"
     fi
 done
 
@@ -82,14 +98,21 @@ else
     exit 1
 fi
 
-
-# Check to see if the $HOME/.qvscode_settings file exists, and if not, use the default values
-if [[ -f "$HOME/.qvscode_settings" ]]; then
-    echo "Using settings file: $HOME/.qvscode_settings"
-    source $HOME/.qvscode_settings
+# Determine if we use default settings file, custom settings file (-p), or bypass settings file (-b)
+if [[ $settings_file == "$HOME/.qvscode_settings" && $bypass_user_settings == 0 ]]; then
+    echo "Using settings file: $settings_file"
+    source $settings_file
     user_settings=1
+elif [[ $settings_file != "$HOME/.qvscode_settings" && $bypass_user_settings == 0 ]]; then
+    if [[ -f "$settings_file" ]]; then
+        echo "Using settings file: $settings_file"
+        source $settings_file
+        user_settings=1
+    else
+        echo "Error: Settings file not found. Exiting..."
+        exit 1
+    fi
 else
-    #echo "No settings file found. Using default values."
     user_settings=0
 fi
 
@@ -120,7 +143,7 @@ if [ $user_settings -eq 1 ]; then
             default_path=$(echo $line | cut -d'=' -f2 | sed 's/^ *//;s/ *$//')
             eval default_path=$default_path
         fi
-    done < "$HOME/.qvscode_settings"
+    done < "$settings_file"
 fi
 
 if [[ $user_settings -eq 0 ]]; then
