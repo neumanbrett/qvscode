@@ -76,7 +76,7 @@ Prompt Mode Structure:
 
 #### Settings Mode
 
-If the script finds a `qvscode_settings` file in `$HOME/.qvscode_settings` then it will import the variables into the script. The template requires specific keywords to pull values in.  It is *highly* recommended to copy the repository's `qvscode_settings_template` to your `$HOME` directory, rename it to `.qvscode_settings`, and then modify the values for each argument instead of manually creating the settings file.  The format for the template:
+If the script finds a `qvscode_settings` file in `$HOME/.qvscode_settings` then it will import the variables into the script. The template requires specific keywords to pull values in.  It is *highly* recommended to copy the repository's `qvscode_settings_template` to your `$HOME` directory, rename it to `.qvscode_settings`, and then modify the values for each argument instead of manually creating the settings file.  The template can also be found in `/glade/work/csgteam/qvscode` The format for the template:
 
 ```
 system=casper

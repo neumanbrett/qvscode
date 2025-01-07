@@ -3,6 +3,7 @@
 function usage {
     echo "qvscode launches a PBS job on a NCAR HPC system and opens a VSCode window on the compute node."
     echo "This command must be launched from a VSCode terminal on the login nodes."
+    echo "A template for the settings file can be found at: https://github.com/neumanbrett/qvscode or /glade/work/csgteam/qvscode"
     echo ""
     echo "Usage: $my_name [options]"
     echo "  options:"
