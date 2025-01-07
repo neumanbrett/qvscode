@@ -6,7 +6,7 @@
 
 You must have a running login session within VSCode to launch the *qvscode* script.  Connect to the login node in VSCode using the method described here: https://ncar-hpc-docs.readthedocs.io/en/latest/environment-and-software/vscode/#connecting-to-compute-nodes  
 
-The command `qvscode` can be called directly in the latest NCAR software stack 24.12.
+The command `qvscode` can be called directly in the latest NCAR software stack 24.12.  The `qvscode` script is only available on Casper.  We are looking to add this script to Derecho in the future.
 
 Alternatively, you can clone the repository and call it a login node launch the script:
 
@@ -107,4 +107,4 @@ Pressing `Ctrl+C` from the login node will kill the PBS job and end your compute
 
 ### Logs
 
-Log files are stored in `$SCRATCH/.qvscode` and show the user arguments and job submission details.
+Log files are stored in `$SCRATCH/.qvscode_logs` and show the user arguments and job submission details.
