@@ -83,7 +83,7 @@ if [[ $settings_file == "$HOME/.qvscode_settings" && $bypass_user_settings == 0 
     echo "Using settings file: $settings_file" | tee -a $qvscode_log
     source $settings_file
     user_settings=1
-elif [[ $custom_settings == 1 ]]; then
+elif [[ $custom_settings == 1 && $bypass_user_settings == 0 ]]; then
     if [[ -f "$settings_file" ]]; then
         echo "Using settings file: $settings_file" | tee -a $qvscode_log
         source $settings_file
