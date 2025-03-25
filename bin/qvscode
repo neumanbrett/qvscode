@@ -100,27 +100,27 @@ fi
 # Parse user settings file
 if [ $user_settings -eq 1 ]; then
     while IFS= read -r line; do
-        if [[ $line == *"project"* ]]; then
+        if [[ $line == "project"* ]]; then
             default_project=$(echo $line | cut -d'=' -f2)
-        elif [[ $line == *"nodes"* ]]; then
+        elif [[ $line == "nodes"* ]]; then
             default_nodes=$(echo $line | cut -d'=' -f2)
-        elif [[ $line == *"num_cpus"* ]]; then
+        elif [[ $line == "num_cpus"* ]]; then
             default_num_cpus=$(echo $line | cut -d'=' -f2)
-        elif [[ $line == *"cpu_type"* ]]; then
+        elif [[ $line == "cpu_type"* ]]; then
             default_cpu_type=$(echo $line | cut -d'=' -f2)
-        elif [[ $line == *"memory"* ]]; then
+        elif [[ $line == "memory"* ]]; then
             default_memory=$(echo $line | cut -d'=' -f2)
-        elif [[ $line == *"mpi_procs"* ]]; then
+        elif [[ $line == "mpi_procs"* ]]; then
             default_mpi_procs=$(echo $line | cut -d'=' -f2)
-        elif [[ $line == *"ompthreads"* ]]; then
+        elif [[ $line == "ompthreads"* ]]; then
             default_ompthreads=$(echo $line | cut -d'=' -f2)
-        elif [[ $line == *"num_gpus"* ]]; then
+        elif [[ $line == "num_gpus"* ]]; then
             default_num_gpus=$(echo $line | cut -d'=' -f2)
-        elif [[ $line == *"gpu_type"* ]]; then
+        elif [[ $line == "gpu_type"* ]]; then
             default_gpu_type=$(echo $line | cut -d'=' -f2)
-        elif [[ $line == *"walltime"* ]]; then
+        elif [[ $line == "walltime"* ]]; then
             default_walltime=$(echo $line | cut -d'=' -f2)
-        elif [[ $line == *"path"* ]]; then
+        elif [[ $line == "path"* ]]; then
             default_path=$(echo $line | cut -d'=' -f2 | sed 's/^ *//;s/ *$//')
             eval default_path=$default_path
         fi
@@ -267,6 +267,9 @@ cleanup() {
 
 convert_to_seconds() {
     IFS=: read -r hours minutes seconds <<< "$walltime"
+    hours=$((10#$hours))
+    minutes=$((10#$minutes))
+    seconds=$((10#$seconds))
     total_seconds=$((hours * 3600 + minutes * 60 + seconds))
     echo $total_seconds
 }
@@ -370,14 +373,6 @@ echo "You can reconnect to this session by running the following command on a lo
 echo "code --remote ssh-remote+$USER@$computenode.hpc.ucar.edu"
 echo "----------------------------------- " 
 echo "Press Ctrl+C to kill the job and cleanup the VSCode session..."
-
-convert_to_seconds() {
-    IFS=: read -r hours minutes seconds <<< "$walltime"
-    total_seconds=$((hours * 3600 + minutes * 60 + seconds))
-    echo $total_seconds
-}
-
-walltime_seconds=$(convert_to_seconds)
 
 sleep $walltime_seconds 
 
