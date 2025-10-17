@@ -28,9 +28,14 @@ my_name=$(basename $0)
 my_root=$(cd $(dirname $(readlink -f $0))/..; pwd)
 launch_script=$my_root/bin/launch.pbs
 
-# Log file info
-mkdir -p $SCRATCH/.qvscode_logs
-qvscode_log=$SCRATCH/.qvscode_logs/qvscode.$(date +"%Y%m%d%H%M%S").log
+# Log file info and check for the current glade scratch path
+if [[ -z "$SCRATCH" || "$SCRATCH" != "/glade/derecho/scratch/$USER" ]]; then
+    logscratch="/glade/derecho/scratch/$USER"
+else
+    logscratch=$SCRATCH
+fi
+mkdir -p $logscratch/.qvscode_logs
+qvscode_log=$logscratch/.qvscode_logs/qvscode.$(date +"%Y%m%d%H%M%S").log
 
 # Unset qstat debug messages that may interfere with qsub
 unset QSCACHE_DEBUG
