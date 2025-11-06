@@ -309,7 +309,7 @@ qsub_cmd () {
         if [[ $num_gpus -gt 0 ]]; then
             select_args="$select_args:ngpus=$num_gpus"
             if [[ -n "$gpu_type" ]]; then
-                select_args="$select_args -l gpu_type=$gpu_type"
+                select_args="$select_args:gpu_type=$gpu_type"
             fi
         fi
     fi
