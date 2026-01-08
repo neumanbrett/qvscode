@@ -75,12 +75,12 @@ if [[ "$hostname" =~ ^derecho.* ]]; then
     echo "VSCode compute access is not available on Derecho, please launch this script on Casper"
     echo "Exiting..."
     exit 1
-elif [[ "$hostname" =~ ^casper.* ]]; then
+elif [[ "$hostname" =~ ^casper.* ]] || [[ "$hostname" =~ ^crlogin.* ]]; then
     queue="casper"
     vshost="casper"
     echo "Submitting job to Casper"
 else
-    echo "This script must be run on a host named derecho* or casper-login*"
+    echo "This script must be run on a host named derecho* or crlogin*"
     exit 1
 fi
 
